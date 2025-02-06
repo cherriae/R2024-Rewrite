@@ -33,6 +33,7 @@ import frc.robot.Constants.SwerveConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -49,6 +50,9 @@ public class Robot extends TimedRobot {
   // subsystems
   @Logged(name = "Swerve")
   private final Swerve _swerve = TunerConstants.createDrivetrain();
+
+  @Logged(name = "LEDS")
+  private final Leds _leds = new Leds();
 
   private final Autos _autos = new Autos(_swerve);
   private final AutoChooser _autoChooser = new AutoChooser();
@@ -85,6 +89,8 @@ public class Robot extends TimedRobot {
     FaultLogger.setup(_ntInst);
 
     configureBindings();
+    configureDriverBindings();
+    configureOperatorBindings();
 
     SmartDashboard.putData(
         "Robot Self Check",
@@ -127,12 +133,15 @@ public class Robot extends TimedRobot {
         _swerve.drive(
             InputStream.of(_driverController::getLeftY)
                 .negate()
+                .signedPow(2)
                 .scale(SwerveConstants.maxTranslationalSpeed.in(MetersPerSecond)),
             InputStream.of(_driverController::getLeftX)
                 .negate()
+                .signedPow(2)
                 .scale(SwerveConstants.maxTranslationalSpeed.in(MetersPerSecond)),
             InputStream.of(_driverController::getRightX)
                 .negate()
+                .signedPow(2)
                 .scale(SwerveConstants.maxAngularSpeed.in(RadiansPerSecond))));
 
     _driverController.x().whileTrue(_swerve.brake());
@@ -142,6 +151,18 @@ public class Robot extends TimedRobot {
         .b()
         .whileTrue(_swerve.driveTo(new Pose2d(10, 3, Rotation2d.fromDegrees(-150))));
   }
+
+  private void configureDriverBindings() {
+    _driverController.x().whileTrue(_swerve.brake());
+    _driverController.a().onTrue(_swerve.toggleFieldOriented());
+    _driverController.y().onTrue(_swerve.resetHeading());
+
+    // _driverController
+    //     .b()
+    //     .whileTrue(_swerve.driveTo(new Pose2d(10, 3, Rotation2d.fromDegrees(-150))));
+  }
+
+  public void configureOperatorBindings() {}
 
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics

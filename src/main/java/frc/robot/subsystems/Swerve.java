@@ -326,6 +326,21 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem, SelfChec
     return run(() -> setControl(_brakeRequest)).withName("Brake");
   }
 
+  /** Resets the heading to zero */
+  public Command resetHeading() {
+    return runOnce(
+        () -> {
+          Rotation2d rotation =
+              DriverStation.getAlliance()
+                  .map(
+                      allianceColor ->
+                          allianceColor == Alliance.Red ? Rotation2d.k180deg : Rotation2d.kZero)
+                  .orElse(Rotation2d.kZero);
+
+          resetRotation(rotation);
+        });
+  }
+
   /**
    * Creates a new Command that drives the chassis.
    *
@@ -508,7 +523,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem, SelfChec
             var stdDevs = e.stdDevs();
             addVisionMeasurement(
                 e.pose().toPose2d(),
-                e.timestamp(),
+                Utils.fpgaToCurrentTime(e.timestamp()),
                 VecBuilder.fill(stdDevs[0], stdDevs[1], stdDevs[2]));
           });
     }

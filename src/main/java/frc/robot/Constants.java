@@ -37,7 +37,7 @@ public final class Constants {
 
   public static class FieldConstants {
     public static final AprilTagFieldLayout fieldLayout =
-        AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+        AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
   }
 
   public static class VisionConstants {
@@ -80,5 +80,10 @@ public final class Constants {
 
     public static final LinearVelocity translationalDeadband = maxTranslationalSpeed.times(0.1);
     public static final AngularVelocity rotationalDeadband = maxAngularSpeed.times(0.1);
+  }
+
+  public static class AddressableLed {
+    public static final int LED_PORT = 9;
+    public static final int LED_COUNT = 225;
   }
 }
