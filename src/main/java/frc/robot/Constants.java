@@ -11,12 +11,17 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.units.AngularAccelerationUnit;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Per;
 import frc.robot.generated.TunerConstants;
 import frc.robot.utils.VisionPoseEstimator.VisionPoseEstimatorConstants;
 
@@ -33,6 +38,7 @@ public final class Constants {
 
   public static class Ports {
     public static final int driverController = 0;
+    public static final int operatorController = 1;
   }
 
   public static class FieldConstants {
@@ -83,7 +89,51 @@ public final class Constants {
   }
 
   public static class AddressableLed {
-    public static final int LED_PORT = 9;
+    public static final int LED_PORT = 1;
     public static final int LED_COUNT = 225;
+  }
+
+  public static class ShooterConstants {
+    public static final int shooterRightPort = 13;
+    public static final int shooterLeftPort = 14;
+
+    // change later
+    public static final Per<VoltageUnit, AngularVelocityUnit> shooterkV =
+        VoltsPerRadianPerSecond.ofNative(0.8);
+    public static final Per<VoltageUnit, AngularAccelerationUnit> shooterkA =
+        VoltsPerRadianPerSecondSquared.ofNative(0);
+
+    public static final int shooterGearRatio = 12;
+    public static final AngularVelocity maxShooterSpeed = RadiansPerSecond.of(30.039351785273068);
+    public static final AngularAcceleration maxShooterAcceleration =
+        RadiansPerSecondPerSecond.of(20);
+    public static final double shooterMOI = 0.001;
+  }
+
+  public static class ElevatorConstants {
+    public static final int elevatorLeftPort = 16;
+    public static final int elevatorRightPort = 17;
+
+    // change later
+    public static final Per<VoltageUnit, AngularVelocityUnit> elevatorkV =
+        VoltsPerRadianPerSecond.ofNative(0.18);
+    public static final Per<VoltageUnit, AngularAccelerationUnit> elevatorkA =
+        VoltsPerRadianPerSecondSquared.ofNative(0);
+
+    public static final int elevatorGearRatio = 15;
+    public static final AngularVelocity maxElevatorSpeed = RadiansPerSecond.of(70.19675892636535);
+    public static final AngularAcceleration maxElevatorAcceleration =
+        RadiansPerSecondPerSecond.of(90);
+
+    public static final Distance drumRadius = Inches.of(1.504 / 2);
+    public static final Distance drumCircumference = drumRadius.times(2 * Math.PI);
+
+    public static final Angle minElevatorHeight = Radians.of(0);
+    public static final Angle maxElevatorHeight = Radians.of(100);
+  }
+
+  public static class IntakeConstants {
+    public static final int intakeAcutatorPort = 18;
+    public static final int intakeFeedPort = 19;
   }
 }

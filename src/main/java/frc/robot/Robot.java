@@ -22,17 +22,24 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PS5Controller;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.FaultLogger;
 import frc.lib.InputStream;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.Ports;
+import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.Swerve;
 
@@ -46,10 +53,15 @@ public class Robot extends TimedRobot {
   // controllers
   private final CommandXboxController _driverController =
       new CommandXboxController(Ports.driverController);
+  private final PS5Controller _operatorController =
+      new PS5Controller(Ports.operatorController);
 
   // subsystems
   @Logged(name = "Swerve")
   private final Swerve _swerve = TunerConstants.createDrivetrain();
+
+  @Logged(name = "Elevator + Shooter")
+  private final Elevator _elevator = new Elevator();
 
   @Logged(name = "LEDS")
   private final Leds _leds = new Leds();
@@ -162,7 +174,17 @@ public class Robot extends TimedRobot {
     //     .whileTrue(_swerve.driveTo(new Pose2d(10, 3, Rotation2d.fromDegrees(-150))));
   }
 
-  public void configureOperatorBindings() {}
+  public void configureOperatorBindings() {
+    new Trigger(() -> true)
+        .onTrue(
+            _elevator.setElevatorSpeed(
+                InputStream.of(_operatorController::getRightY)
+                    .deadband(0.05, 1)
+                    .negate()
+                    .scale(ElevatorConstants.maxElevatorSpeed.in(RadiansPerSecond))
+            )
+        );
+  }
 
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
@@ -197,5 +219,6 @@ public class Robot extends TimedRobot {
     super.close();
 
     _swerve.close();
+    _elevator.close();
   }
 }
