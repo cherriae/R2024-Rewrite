@@ -50,7 +50,7 @@ public class Elevator extends AdvancedSubsystem {
   private final TalonFX _rightElevatorMotor =
       new TalonFX(ElevatorConstants.elevatorRightPort, "rio");
   private final TalonFX _wristMotor =
-      new TalonFX(Constants.IntakeConstants.intakeAcutatorPort, "rio");
+      new TalonFX(Constants.ElevatorConstants.wristMotorPort, "rio");
 
   // Rights follow Left for elevator
   private final StatusSignal<Angle> _heightGetter = _leftElevatorMotor.getPosition();
@@ -93,17 +93,21 @@ public class Elevator extends AdvancedSubsystem {
     leftElevatorMotorConfigs.Slot0.kS = ElevatorConstants.elevatorkS.in(Volts);
     leftElevatorMotorConfigs.Feedback.SensorToMechanismRatio = ElevatorConstants.elevatorGearRatio;
     leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorConstants.maxElevatorHeight.in(Rotations);
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        ElevatorConstants.maxElevatorHeight.in(Rotations);
     leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorConstants.minElevatorHeight.in(Rotations);
- 
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        ElevatorConstants.minElevatorHeight.in(Rotations);
+
     wristMotorConfigs.Slot0.kV = WristConstants.wristkV.in(Volts.per(RotationsPerSecond));
     wristMotorConfigs.Slot0.kA = WristConstants.wristkA.in(Volts.per(RotationsPerSecondPerSecond));
     wristMotorConfigs.Feedback.SensorToMechanismRatio = WristConstants.wristGearRatio;
     wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = WristConstants.maxWristAngle.in(Rotations);
+    wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        WristConstants.maxWristAngle.in(Rotations);
     wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = WristConstants.minWristAngle.in(Rotations);
+    wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        WristConstants.minWristAngle.in(Rotations);
 
     CTREUtil.attempt(
         () -> _leftElevatorMotor.getConfigurator().apply(leftElevatorMotorConfigs),

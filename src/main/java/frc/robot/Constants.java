@@ -102,6 +102,7 @@ public final class Constants {
   }
 
   public static class ElevatorConstants {
+    public static final int wristMotorPort = 15;
     public static final int elevatorLeftPort = 16;
     public static final int elevatorRightPort = 17;
 
@@ -138,7 +139,23 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int intakeAcutatorPort = 18;
+    public static final int intakeAcutautorPort = 18;
     public static final int intakeFeedPort = 19;
+
+    public static final Angle actuatorStowed = Radians.of(0);
+    public static final Angle actuatorOut = Radians.of(Math.PI / 2);
+
+    public static final Per<VoltageUnit, AngularVelocityUnit> actuatorkV =
+        VoltsPerRadianPerSecond.ofNative(0.1); // Adjust value as needed
+    public static final Per<VoltageUnit, AngularAccelerationUnit> actuatorkA =
+        VoltsPerRadianPerSecondSquared.ofNative(0);
+
+    public static final AngularVelocity actuatorVelocity = RadiansPerSecond.of(720 * Math.PI / 180);
+    public static final AngularAcceleration actuatorAcceleration =
+        RadiansPerSecondPerSecond.of(1440 * Math.PI / 180);
+    public static final AngularVelocity feedSpeed = RadiansPerSecond.of(1);
+
+    public static final double actuatorGearRatio = 8;
+    public static final Distance intakeLength = Meters.of(28.5);
   }
 }

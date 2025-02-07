@@ -38,6 +38,7 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.Swerve;
 
@@ -57,8 +58,11 @@ public class Robot extends TimedRobot {
   @Logged(name = "Swerve")
   private final Swerve _swerve = TunerConstants.createDrivetrain();
 
-  @Logged(name = "Elevator + Shooter")
+  @Logged(name = "Elevator + Wrist")
   private final Elevator _elevator = new Elevator();
+
+  @Logged(name = "Intake")
+  private final Intake _intake = new Intake();
 
   @Logged(name = "LEDS")
   private final Leds _leds = new Leds();
@@ -186,6 +190,10 @@ public class Robot extends TimedRobot {
                 InputStream.of(_operatorController::getLeftY)
                     .deadband(0.05, 1)
                     .scale(WristConstants.maxWristSpeed.in(RadiansPerSecond))));
+
+    new Trigger(() -> _operatorController.getCrossButton()).whileTrue(_intake.intakeNote());
+
+    new Trigger(() -> _operatorController.getSquareButton()).whileTrue(_intake.outtakeNote());
   }
 
   /**
