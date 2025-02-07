@@ -1,14 +1,6 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Hertz;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
@@ -19,7 +11,6 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
@@ -28,7 +19,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
@@ -41,7 +32,7 @@ import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
 import frc.robot.Constants;
 import frc.robot.Constants.ElevatorConstants;
-import frc.robot.Constants.ShooterConstants;
+import frc.robot.Constants.WristConstants;
 import frc.robot.Robot;
 import java.util.function.DoubleSupplier;
 
@@ -52,73 +43,67 @@ public class Elevator extends AdvancedSubsystem {
   private final MechanismLigament2d _elevator =
       _root.append(new MechanismLigament2d("elevator", 0.1, 90, 3, new Color8Bit(Color.kCyan)));
 
-  private final MechanismLigament2d _shooter =
-      _elevator.append(
-          new MechanismLigament2d("shooter", 0.3, 15, 3, new Color8Bit(Color.kAliceBlue)));
+  private final MechanismLigament2d _wrist =
+      _elevator.append(new MechanismLigament2d("wrist", 0.3, 15, 3, new Color8Bit(Color.kPurple)));
 
   private final TalonFX _leftElevatorMotor = new TalonFX(ElevatorConstants.elevatorLeftPort, "rio");
   private final TalonFX _rightElevatorMotor =
       new TalonFX(ElevatorConstants.elevatorRightPort, "rio");
+  private final TalonFX _wristMotor =
+      new TalonFX(Constants.IntakeConstants.intakeAcutatorPort, "rio");
 
-  private final TalonFX _leftShooterMotor = new TalonFX(ShooterConstants.shooterLeftPort, "rio");
-  private final TalonFX _rightShooterMotor = new TalonFX(ShooterConstants.shooterRightPort, "rio");
-
-  // Rights follow Left
+  // Rights follow Left for elevator
   private final StatusSignal<Angle> _heightGetter = _leftElevatorMotor.getPosition();
-  private final StatusSignal<Angle> _angleGetter = _leftShooterMotor.getPosition();
+  private final StatusSignal<Angle> _angleGetter = _wristMotor.getPosition();
 
   private final DynamicMotionMagicVoltage _heightSetter = new DynamicMotionMagicVoltage(0, 0, 0, 0);
   private final DynamicMotionMagicVoltage _angleSetter = new DynamicMotionMagicVoltage(0, 0, 0, 0);
 
   private final StatusSignal<AngularVelocity> _elevatorVelocityGetter =
       _leftElevatorMotor.getVelocity();
-  private final StatusSignal<AngularVelocity> _shooterVelocityGetter =
-      _leftShooterMotor.getVelocity();
+  private final StatusSignal<AngularVelocity> _wristVelocityGetter = _wristMotor.getVelocity();
 
   private final VelocityVoltage _elevatorVelocitySetter = new VelocityVoltage(0);
-  private final VelocityVoltage _shooterVelocitySetter = new VelocityVoltage(0);
+  private final VelocityVoltage _wristVelocitySetter = new VelocityVoltage(0);
 
-  // add later
   private final Constraints _elevatorMaxConstraints =
       new Constraints(
           ElevatorConstants.maxElevatorSpeed.in(RadiansPerSecond),
           ElevatorConstants.maxElevatorAcceleration.in(RadiansPerSecondPerSecond));
 
-  private final Constraints _shooterMaxConstraints =
-      new Constraints(
-          ShooterConstants.maxShooterSpeed.in(RadiansPerSecond),
-          ShooterConstants.maxShooterAcceleration.in(RadiansPerSecondPerSecond));
-
   private final TrapezoidProfile _elevatorMaxProfile =
       new TrapezoidProfile(_elevatorMaxConstraints);
 
-  private final TrapezoidProfile _shooterMaxProfile = new TrapezoidProfile(_shooterMaxConstraints);
-
+  private SingleJointedArmSim _wristSim;
   private ElevatorSim _elevatorSim;
-  private FlywheelSim _shooterSim;
-
   private double _lastSimTime;
-
   private Notifier _simNotifier;
 
   public Elevator() {
+
+    setDefaultCommand(idle());
     var leftElevatorMotorConfigs = new TalonFXConfiguration();
     var rightElevatorMotorConfigs = new TalonFXConfiguration();
-    var leftShooterMotorConfigs = new TalonFXConfiguration();
-    var rightShooterMotorConfigs = new TalonFXConfiguration();
+    var wristMotorConfigs = new TalonFXConfiguration();
 
     leftElevatorMotorConfigs.Slot0.kV =
         ElevatorConstants.elevatorkV.in(Volts.per(RotationsPerSecond));
     leftElevatorMotorConfigs.Slot0.kA =
         ElevatorConstants.elevatorkA.in(Volts.per(RotationsPerSecondPerSecond));
-
+    leftElevatorMotorConfigs.Slot0.kS = ElevatorConstants.elevatorkS.in(Volts);
     leftElevatorMotorConfigs.Feedback.SensorToMechanismRatio = ElevatorConstants.elevatorGearRatio;
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 100;
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
 
-    leftShooterMotorConfigs.Slot0.kV = ShooterConstants.shooterkV.in(Volts.per(RotationsPerSecond));
-    leftShooterMotorConfigs.Slot0.kA =
-        ShooterConstants.shooterkA.in(Volts.per(RotationsPerSecondPerSecond));
-
-    leftShooterMotorConfigs.Feedback.SensorToMechanismRatio = ShooterConstants.shooterGearRatio;
+    wristMotorConfigs.Slot0.kV = WristConstants.wristkV.in(Volts.per(RotationsPerSecond));
+    wristMotorConfigs.Slot0.kA = WristConstants.wristkA.in(Volts.per(RotationsPerSecondPerSecond));
+    wristMotorConfigs.Feedback.SensorToMechanismRatio = WristConstants.wristGearRatio;
+    wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(90);
+    wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRotations(0);
 
     CTREUtil.attempt(
         () -> _leftElevatorMotor.getConfigurator().apply(leftElevatorMotorConfigs),
@@ -126,27 +111,20 @@ public class Elevator extends AdvancedSubsystem {
     CTREUtil.attempt(
         () -> _rightElevatorMotor.getConfigurator().apply(rightElevatorMotorConfigs),
         _rightElevatorMotor);
-    CTREUtil.attempt(
-        () -> _leftShooterMotor.getConfigurator().apply(leftShooterMotorConfigs),
-        _leftShooterMotor);
-    CTREUtil.attempt(
-        () -> _rightShooterMotor.getConfigurator().apply(rightShooterMotorConfigs),
-        _rightShooterMotor);
+    CTREUtil.attempt(() -> _wristMotor.getConfigurator().apply(wristMotorConfigs), _wristMotor);
 
     _rightElevatorMotor.setControl(new Follower(ElevatorConstants.elevatorLeftPort, true));
-    _rightShooterMotor.setControl(new Follower(ShooterConstants.shooterLeftPort, true));
 
     FaultLogger.register(_leftElevatorMotor);
     FaultLogger.register(_rightElevatorMotor);
-    FaultLogger.register(_leftShooterMotor);
-    FaultLogger.register(_rightShooterMotor);
+    FaultLogger.register(_wristMotor);
 
     if (Robot.isSimulation()) {
       _elevatorSim =
           new ElevatorSim(
               DCMotor.getKrakenX60(2),
               ElevatorConstants.elevatorGearRatio,
-              Units.lbsToKilograms(9.398), // change later
+              Units.lbsToKilograms(9.398),
               ElevatorConstants.drumRadius.in(Meters),
               0,
               ElevatorConstants.maxElevatorHeight.in(Rotations)
@@ -154,11 +132,18 @@ public class Elevator extends AdvancedSubsystem {
               false,
               0);
 
-      _shooterSim =
-          new FlywheelSim(
-              LinearSystemId.createFlywheelSystem(
-                  DCMotor.getKrakenX60(1), 0.001, ShooterConstants.shooterGearRatio),
-              DCMotor.getKrakenX60(2));
+      // Add wrist simulation
+      _wristSim =
+          new SingleJointedArmSim(
+              DCMotor.getKrakenX60(1),
+              WristConstants.wristGearRatio,
+              SingleJointedArmSim.estimateMOI(
+                  WristConstants.shooterLength.in(Meters), Units.lbsToKilograms(8.155)),
+              WristConstants.shooterLength.in(Meters),
+              WristConstants.minWristAngle.in(Radians),
+              WristConstants.maxWristAngle.in(Radians),
+              false,
+              0);
 
       startSimThread();
     }
@@ -171,28 +156,27 @@ public class Elevator extends AdvancedSubsystem {
         new Notifier(
             () -> {
               final double batteryVolts = RobotController.getBatteryVoltage();
-
               final double currentTime = Utils.getCurrentTimeSeconds();
               final double deltaTime = currentTime - _lastSimTime;
 
               var leftElevatorMotorSimState = _leftElevatorMotor.getSimState();
               var rightElevatorMotorSimState = _rightElevatorMotor.getSimState();
-              var leftShooterSimState = _leftShooterMotor.getSimState();
-              var rightShooterSimState = _rightShooterMotor.getSimState();
+              var wristSimState = _wristMotor.getSimState();
 
               leftElevatorMotorSimState.setSupplyVoltage(batteryVolts);
               rightElevatorMotorSimState.setSupplyVoltage(batteryVolts);
-              leftShooterSimState.setSupplyVoltage(batteryVolts);
-              rightShooterSimState.setSupplyVoltage(batteryVolts);
+              wristSimState.setSupplyVoltage(batteryVolts);
 
+              // Update elevator simulation
               _elevatorSim.setInputVoltage(
                   leftElevatorMotorSimState.getMotorVoltageMeasure().in(Volts));
-              _shooterSim.setInputVoltage(leftShooterSimState.getMotorVoltageMeasure().in(Volts));
-
               _elevatorSim.update(deltaTime);
-              _shooterSim.update(deltaTime);
 
-              // raw rotor positions
+              // Update wrist simulation
+              _wristSim.setInputVoltage(wristSimState.getMotorVoltageMeasure().in(Volts));
+              _wristSim.update(deltaTime);
+
+              // Elevator position and velocity updates
               leftElevatorMotorSimState.setRawRotorPosition(
                   _elevatorSim.getPositionMeters()
                       / ElevatorConstants.drumCircumference.in(Meters)
@@ -202,7 +186,6 @@ public class Elevator extends AdvancedSubsystem {
                       / ElevatorConstants.drumCircumference.in(Meters)
                       * ElevatorConstants.elevatorGearRatio);
 
-              // raw rotor velocities
               leftElevatorMotorSimState.setRotorVelocity(
                   _elevatorSim.getVelocityMetersPerSecond()
                       / ElevatorConstants.drumCircumference.in(Meters)
@@ -212,17 +195,18 @@ public class Elevator extends AdvancedSubsystem {
                       / ElevatorConstants.drumCircumference.in(Meters)
                       * ElevatorConstants.elevatorGearRatio);
 
-              leftShooterSimState.setRotorVelocity(
-                  _shooterSim.getAngularVelocity().in(RotationsPerSecond)
-                      * ShooterConstants.shooterGearRatio);
-              rightShooterSimState.setRotorVelocity(
-                  _shooterSim.getAngularVelocity().in(RotationsPerSecond)
-                      * ShooterConstants.shooterGearRatio);
+              // Wrist position and velocity updates
+              wristSimState.setRawRotorPosition(
+                  Units.radiansToRotations(
+                      _wristSim.getAngleRads() * WristConstants.wristGearRatio));
+              wristSimState.setRotorVelocity(
+                  Units.radiansToRotations(
+                      _wristSim.getVelocityRadPerSec() * WristConstants.wristGearRatio));
 
               _lastSimTime = currentTime;
             });
 
-    _simNotifier.setName("Elevator/Shooter Sim Thread");
+    _simNotifier.setName("Elevator/Wrist Sim Thread");
     _simNotifier.startPeriodic(1 / Constants.simUpdateFrequency.in(Hertz));
   }
 
@@ -231,9 +215,9 @@ public class Elevator extends AdvancedSubsystem {
     return _elevatorVelocityGetter.refresh().getValue().in(RadiansPerSecond);
   }
 
-  @Logged(name = "Shooter Velocity")
+  @Logged(name = "Wrist Velocity")
   public double getWristVelocity() {
-    return _shooterVelocityGetter.refresh().getValue().in(RadiansPerSecond);
+    return _wristVelocityGetter.refresh().getValue().in(RadiansPerSecond);
   }
 
   @Logged(name = "Elevator Height")
@@ -241,27 +225,34 @@ public class Elevator extends AdvancedSubsystem {
     return _heightGetter.refresh().getValue().in(Radians);
   }
 
-  @Logged(name = "Shooter Angle")
+  @Logged(name = "Wrist Angle")
   public double getAngle() {
     return _angleGetter.refresh().getValue().in(Radians);
   }
 
-  public Command setElevatorSpeed(DoubleSupplier elevatorSpeed) {
-    return run(
-        () -> {
-          _leftElevatorMotor.setControl(
-              _elevatorVelocitySetter.withVelocity(
-                  elevatorSpeed.getAsDouble()));
-        }).withName("Set Elevator Spped");
+  private Command idle() {
+    return run(() -> {
+          _leftElevatorMotor.setControl(_elevatorVelocitySetter.withVelocity(0));
+          _wristMotor.setControl(_wristVelocitySetter.withVelocity(0));
+        })
+        .withName("Idle");
   }
 
-  public Command setShooterSpeed(DoubleSupplier shooterSpeed) {
-    return run(
-        () -> {
-          _leftShooterMotor.setControl(
-              _shooterVelocitySetter.withVelocity(
-                  shooterSpeed.getAsDouble()));
-        }).withName("Set Shooter Speed");
+  public Command setElevatorSpeed(DoubleSupplier elevatorSpeed) {
+    return run(() -> {
+          _leftElevatorMotor.setControl(
+              _elevatorVelocitySetter.withVelocity(
+                  Units.radiansToRotations(elevatorSpeed.getAsDouble())));
+        })
+        .withName("Set Elevator Speed");
+  }
+
+  public Command setWristAngle(DoubleSupplier angle) {
+    return run(() -> {
+          _wristMotor.setControl(
+              _wristVelocitySetter.withVelocity(Units.radiansToRotations(angle.getAsDouble())));
+        })
+        .withName("Set Wrist Angle");
   }
 
   @Override
@@ -274,10 +265,14 @@ public class Elevator extends AdvancedSubsystem {
     super.simulationPeriodic();
     _elevator.setLength(
         Units.radiansToRotations(getHeight()) * ElevatorConstants.drumCircumference.in(Meters));
-    _shooter.setAngle(Math.toDegrees(getAngle()) - 90);
-    SmartDashboard.putData("Shootelevator Visualizer", _mech);
+    _wrist.setAngle(Math.toDegrees(getAngle()) - 90);
+    SmartDashboard.putData("Elevator Visualizer", _mech);
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    if (_simNotifier != null) {
+      _simNotifier.close();
+    }
+  }
 }

@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Per;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.generated.TunerConstants;
 import frc.robot.utils.VisionPoseEstimator.VisionPoseEstimatorConstants;
 
@@ -97,17 +98,7 @@ public final class Constants {
     public static final int shooterRightPort = 13;
     public static final int shooterLeftPort = 14;
 
-    // change later
-    public static final Per<VoltageUnit, AngularVelocityUnit> shooterkV =
-        VoltsPerRadianPerSecond.ofNative(0.8);
-    public static final Per<VoltageUnit, AngularAccelerationUnit> shooterkA =
-        VoltsPerRadianPerSecondSquared.ofNative(0);
-
     public static final int shooterGearRatio = 12;
-    public static final AngularVelocity maxShooterSpeed = RadiansPerSecond.of(30.039351785273068);
-    public static final AngularAcceleration maxShooterAcceleration =
-        RadiansPerSecondPerSecond.of(20);
-    public static final double shooterMOI = 0.001;
   }
 
   public static class ElevatorConstants {
@@ -130,6 +121,20 @@ public final class Constants {
 
     public static final Angle minElevatorHeight = Radians.of(0);
     public static final Angle maxElevatorHeight = Radians.of(100);
+    public static final Voltage elevatorkS = Volts.of(0.25);
+  }
+
+  public static final class WristConstants {
+    public static final double wristGearRatio = 45;
+    public static final Distance shooterLength = Meters.of(0.3);
+    public static final Angle minWristAngle = Radians.of(0);
+    public static final Angle maxWristAngle = Radians.of(Math.PI / 2);
+    public static final Per<VoltageUnit, AngularVelocityUnit> wristkV =
+        VoltsPerRadianPerSecond.ofNative(0.8);
+    public static final Per<VoltageUnit, AngularAccelerationUnit> wristkA =
+        VoltsPerRadianPerSecondSquared.ofNative(0);
+    public static final AngularVelocity maxWristSpeed =
+        RadiansPerSecond.of(2 * Math.PI); // Adjust based on your needs
   }
 
   public static class IntakeConstants {

@@ -23,10 +23,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PS5Controller;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -34,8 +32,8 @@ import frc.lib.FaultLogger;
 import frc.lib.InputStream;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.Ports;
-import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.Constants.WristConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.generated.TunerConstants;
@@ -53,8 +51,7 @@ public class Robot extends TimedRobot {
   // controllers
   private final CommandXboxController _driverController =
       new CommandXboxController(Ports.driverController);
-  private final PS5Controller _operatorController =
-      new PS5Controller(Ports.operatorController);
+  private final PS5Controller _operatorController = new PS5Controller(Ports.operatorController);
 
   // subsystems
   @Logged(name = "Swerve")
@@ -175,15 +172,21 @@ public class Robot extends TimedRobot {
   }
 
   public void configureOperatorBindings() {
-    new Trigger(() -> true)
-        .onTrue(
+    new Trigger(() -> Math.abs(_operatorController.getRightY()) > 0.05)
+        .whileTrue(
             _elevator.setElevatorSpeed(
                 InputStream.of(_operatorController::getRightY)
                     .deadband(0.05, 1)
                     .negate()
-                    .scale(ElevatorConstants.maxElevatorSpeed.in(RadiansPerSecond))
-            )
-        );
+                    .scale(ElevatorConstants.maxElevatorSpeed.in(RadiansPerSecond))));
+
+    new Trigger(() -> Math.abs(_operatorController.getLeftY()) > 0.05)
+        .whileTrue(
+            _elevator.setWristAngle(
+                InputStream.of(_operatorController::getLeftY)
+                    .deadband(0.05, 1)
+                    .negate()
+                    .scale(WristConstants.maxWristSpeed.in(RadiansPerSecond))));
   }
 
   /**
