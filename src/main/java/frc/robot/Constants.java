@@ -120,15 +120,15 @@ public final class Constants {
     public static final Distance drumCircumference = drumRadius.times(2 * Math.PI);
 
     public static final Angle minElevatorHeight = Radians.of(0);
-    public static final Angle maxElevatorHeight = Radians.of(100);
+    public static final Angle maxElevatorHeight = Radians.of(40);
     public static final Voltage elevatorkS = Volts.of(0.25);
   }
 
   public static final class WristConstants {
     public static final double wristGearRatio = 45;
     public static final Distance shooterLength = Meters.of(0.3);
-    public static final Angle minWristAngle = Radians.of(0);
-    public static final Angle maxWristAngle = Radians.of(Math.PI / 2);
+    public static final Angle minWristAngle = Radians.of(-Math.PI / 2);
+    public static final Angle maxWristAngle = Radians.of(0);
     public static final Per<VoltageUnit, AngularVelocityUnit> wristkV =
         VoltsPerRadianPerSecond.ofNative(0.8);
     public static final Per<VoltageUnit, AngularAccelerationUnit> wristkA =

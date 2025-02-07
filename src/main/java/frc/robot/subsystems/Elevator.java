@@ -93,17 +93,17 @@ public class Elevator extends AdvancedSubsystem {
     leftElevatorMotorConfigs.Slot0.kS = ElevatorConstants.elevatorkS.in(Volts);
     leftElevatorMotorConfigs.Feedback.SensorToMechanismRatio = ElevatorConstants.elevatorGearRatio;
     leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 100;
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorConstants.maxElevatorHeight.in(Rotations);
     leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
-
+    leftElevatorMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorConstants.minElevatorHeight.in(Rotations);
+ 
     wristMotorConfigs.Slot0.kV = WristConstants.wristkV.in(Volts.per(RotationsPerSecond));
     wristMotorConfigs.Slot0.kA = WristConstants.wristkA.in(Volts.per(RotationsPerSecondPerSecond));
     wristMotorConfigs.Feedback.SensorToMechanismRatio = WristConstants.wristGearRatio;
     wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Units.degreesToRotations(90);
+    wristMotorConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = WristConstants.maxWristAngle.in(Rotations);
     wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Units.degreesToRotations(0);
+    wristMotorConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = WristConstants.minWristAngle.in(Rotations);
 
     CTREUtil.attempt(
         () -> _leftElevatorMotor.getConfigurator().apply(leftElevatorMotorConfigs),
@@ -265,7 +265,7 @@ public class Elevator extends AdvancedSubsystem {
     super.simulationPeriodic();
     _elevator.setLength(
         Units.radiansToRotations(getHeight()) * ElevatorConstants.drumCircumference.in(Meters));
-    _wrist.setAngle(Math.toDegrees(getAngle()) - 90);
+    _wrist.setAngle(Math.toDegrees(getAngle() + 90));
     SmartDashboard.putData("Elevator Visualizer", _mech);
   }
 

@@ -185,7 +185,6 @@ public class Robot extends TimedRobot {
             _elevator.setWristAngle(
                 InputStream.of(_operatorController::getLeftY)
                     .deadband(0.05, 1)
-                    .negate()
                     .scale(WristConstants.maxWristSpeed.in(RadiansPerSecond))));
   }
 
