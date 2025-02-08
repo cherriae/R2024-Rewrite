@@ -189,11 +189,14 @@ public class Robot extends TimedRobot {
             _elevator.setWristAngle(
                 InputStream.of(_operatorController::getLeftY)
                     .deadband(0.05, 1)
+                    .negate()
                     .scale(WristConstants.maxWristSpeed.in(RadiansPerSecond))));
 
     new Trigger(() -> _operatorController.getCrossButton()).whileTrue(_intake.intakeNote());
 
     new Trigger(() -> _operatorController.getSquareButton()).whileTrue(_intake.outtakeNote());
+
+    new Trigger(() -> _operatorController.getCircleButton()).onTrue(_elevator.home());
   }
 
   /**

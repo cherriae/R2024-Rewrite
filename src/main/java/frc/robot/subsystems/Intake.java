@@ -148,31 +148,32 @@ public class Intake extends AdvancedSubsystem {
   private void setSpeeds(double actuatorAngle, double feedSpeed) {
     _actuatorMotor.setControl(
         _actuatorPositionSetter.withPosition(Units.radiansToRotations(actuatorAngle)));
-    _feedMotor.setControl(
-        _feedVelocitySetter.withVelocity(Units.radiansToRotations(feedSpeed)));
+    _feedMotor.setControl(_feedVelocitySetter.withVelocity(Units.radiansToRotations(feedSpeed)));
   }
 
   private Command stow() {
-    return run(() -> {setSpeeds(IntakeConstants.actuatorStowed.in(Radians), 0);}).withName("Stow");
+    return run(() -> {
+          setSpeeds(IntakeConstants.actuatorStowed.in(Radians), 0);
+        })
+        .withName("Stow");
   }
 
   public Command intakeNote() {
-    return run(
-        () -> {
-            setSpeeds(
-                    IntakeConstants.actuatorOut.in(Radians),
-                    IntakeConstants.feedSpeed.in(RadiansPerSecond));
-        }).withName("Intake.");
+    return run(() -> {
+          setSpeeds(
+              IntakeConstants.actuatorOut.in(Radians),
+              IntakeConstants.feedSpeed.in(RadiansPerSecond));
+        })
+        .withName("Intake.");
   }
 
   public Command outtakeNote() {
-    return run(
-        () -> {
-            setSpeeds(
-                    IntakeConstants.actuatorOut.in(Radians),
-                    -IntakeConstants.feedSpeed.in(RadiansPerSecond))
-                ;}
-                ).withName("Outtake");
+    return run(() -> {
+          setSpeeds(
+              IntakeConstants.actuatorOut.in(Radians),
+              -IntakeConstants.feedSpeed.in(RadiansPerSecond));
+        })
+        .withName("Outtake");
   }
 
   @Override

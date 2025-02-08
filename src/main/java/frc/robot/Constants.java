@@ -121,15 +121,15 @@ public final class Constants {
     public static final Distance drumCircumference = drumRadius.times(2 * Math.PI);
 
     public static final Angle minElevatorHeight = Radians.of(0);
-    public static final Angle maxElevatorHeight = Radians.of(40);
+    public static final Angle maxElevatorHeight = Radians.of(50);
     public static final Voltage elevatorkS = Volts.of(0.25);
   }
 
   public static final class WristConstants {
     public static final double wristGearRatio = 45;
     public static final Distance shooterLength = Meters.of(0.3);
-    public static final Angle minWristAngle = Radians.of(-Math.PI / 2);
-    public static final Angle maxWristAngle = Radians.of(0);
+    public static final Angle minWristAngle = Radians.of(Math.PI / 2);
+    public static final Angle maxWristAngle = Radians.of(Math.PI);
     public static final Per<VoltageUnit, AngularVelocityUnit> wristkV =
         VoltsPerRadianPerSecond.ofNative(0.8);
     public static final Per<VoltageUnit, AngularAccelerationUnit> wristkA =
@@ -142,20 +142,20 @@ public final class Constants {
     public static final int intakeAcutautorPort = 18;
     public static final int intakeFeedPort = 19;
 
-    public static final Angle actuatorStowed = Radians.of(0);
-    public static final Angle actuatorOut = Radians.of(Math.PI / 2);
+    public static final Angle actuatorStowed = Degrees.of(-320);
+    public static final Angle actuatorOut = Degrees.of(-180);
 
     public static final Per<VoltageUnit, AngularVelocityUnit> actuatorkV =
-        VoltsPerRadianPerSecond.ofNative(0.1); // Adjust value as needed
+        VoltsPerRadianPerSecond.ofNative(1); // Adjust value as needed
     public static final Per<VoltageUnit, AngularAccelerationUnit> actuatorkA =
-        VoltsPerRadianPerSecondSquared.ofNative(0);
+        VoltsPerRadianPerSecondSquared.ofNative(0.2);
 
-    public static final AngularVelocity actuatorVelocity = RadiansPerSecond.of(720 * Math.PI / 180);
+    public static final AngularVelocity actuatorVelocity = RadiansPerSecond.of(4 * Math.PI);
     public static final AngularAcceleration actuatorAcceleration =
-        RadiansPerSecondPerSecond.of(1440 * Math.PI / 180);
-    public static final AngularVelocity feedSpeed = RadiansPerSecond.of(1);
+        RadiansPerSecondPerSecond.of(8 * Math.PI);
+    public static final AngularVelocity feedSpeed = RadiansPerSecond.of(30);
 
     public static final double actuatorGearRatio = 8;
-    public static final Distance intakeLength = Meters.of(28.5);
+    public static final Distance intakeLength = Meters.of(0.7239);
   }
 }

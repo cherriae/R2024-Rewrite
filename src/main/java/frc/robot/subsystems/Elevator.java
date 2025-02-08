@@ -259,6 +259,20 @@ public class Elevator extends AdvancedSubsystem {
         .withName("Set Wrist Angle");
   }
 
+  public Command home() {
+    return run(() -> {
+          _leftElevatorMotor.setControl(
+              _elevatorVelocitySetter.withVelocity(
+                  -Units.radiansToRotations(
+                      ElevatorConstants.maxElevatorSpeed.in(RadiansPerSecond))));
+          _wristMotor.setControl(
+              _wristVelocitySetter.withVelocity(
+                  Units.radiansToRotations(WristConstants.maxWristSpeed.in(RadiansPerSecond))));
+        })
+        .until(() -> getHeight() < 1 && getAngle() < 1)
+        .withName("Home");
+  }
+
   @Override
   public void periodic() {
     super.periodic();
